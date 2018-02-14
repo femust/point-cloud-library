@@ -21,10 +21,19 @@ CloudHandler();
 ~CloudHandler();
 
 void GraspCloud(const std::string);
-void FilterCloud(pcl::PointCloud<pcl::PointXYZRGBA>::Ptr);
-void EstimatePointNormal(pcl::PointCloud<pcl::PointXYZRGBA>::Ptr, pcl::PointCloud<pcl::Normal>::Ptr);
-void CylinderSegmentation(pcl::PointCloud<pcl::PointXYZRGBA>::Ptr,pcl::PointCloud<pcl::Normal>::Ptr,pcl::PointCloud<pcl::PointXYZRGBA>::Ptr);
 
+void FilterCloud(pcl::PointCloud<pcl::PointXYZRGBA>::Ptr);
+
+void EstimatePointNormal(pcl::PointCloud<pcl::PointXYZRGBA>::Ptr,
+                         pcl::PointCloud<pcl::Normal>::Ptr);
+
+void CylinderSegmentation(pcl::PointCloud<pcl::PointXYZRGBA>::Ptr,
+                          pcl::PointCloud<pcl::Normal>::Ptr,
+                          pcl::PointCloud<pcl::PointXYZRGBA>::Ptr);
+
+void PlaneSegmentation(pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud_filtered,
+                                        pcl::PointCloud<pcl::Normal>::Ptr cloud_normals,
+                                        pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud_plane);
 
 pcl::PointCloud<pcl::PointXYZRGBA>::Ptr  StairsAndPapesDetection();
 
