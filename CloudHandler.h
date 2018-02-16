@@ -12,6 +12,9 @@
 #include <pcl/sample_consensus/method_types.h>
 #include <pcl/sample_consensus/model_types.h>
 #include <pcl/visualization/cloud_viewer.h>
+#include <pcl/filters/extract_indices.h>
+#include <pcl/features/normal_3d.h>
+
 
 class CloudHandler {
 
@@ -33,9 +36,9 @@ void CylinderSegmentation(pcl::PointCloud<pcl::PointXYZRGBA>::Ptr,
 
 void PlaneSegmentation(pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud_filtered,
                                         pcl::PointCloud<pcl::Normal>::Ptr cloud_normals,
-                                        pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud_plane);
+                                        std::vector<pcl::PointCloud<pcl::PointXYZRGBA>::Ptr> &planes);
 
-pcl::PointCloud<pcl::PointXYZRGBA>::Ptr  StairsAndPapesDetection();
+std::vector<pcl::PointCloud<pcl::PointXYZRGBA>::Ptr> StairsAndPapesDetection();
 
 
 pcl::PointCloud<pcl::PointXYZRGBA>::Ptr GiveCloudPointer() const;
