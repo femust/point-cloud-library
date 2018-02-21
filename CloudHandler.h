@@ -15,10 +15,23 @@
 #include <pcl/filters/extract_indices.h>
 #include <pcl/features/normal_3d.h>
 #include <pcl/filters/voxel_grid.h>
+#include <pcl/segmentation/region_growing.h>
 
 
 
 class CloudHandler {
+
+private:
+typedef pcl::PointXYZRGB PointT;
+
+ pcl::PointCloud<PointT>::Ptr _cloud;
+ pcl::PointCloud<pcl::Normal>::Ptr cloud_normals;
+ pcl::PointCloud<PointT>::Ptr cloud_filtered;
+ pcl::PointCloud<PointT>::Ptr cloud_cylinder;
+ std::vector<pcl::PointCloud<PointT>::Ptr> _planes;
+ std::vector<Eigen::Vector4f> _centroid_planes;
+
+
 
 public:
 
@@ -27,39 +40,27 @@ CloudHandler();
 
 void GraspCloud(const std::string);
 
-void FilterCloud(pcl::PointCloud<pcl::PointXYZRGBA>::Ptr);
+void FilterCloud();
 
-void EstimatePointNormal(pcl::PointCloud<pcl::PointXYZRGBA>::Ptr,
-                         pcl::PointCloud<pcl::Normal>::Ptr);
+void EstimatePointNormal();
 
-void CylinderSegmentation(pcl::PointCloud<pcl::PointXYZRGBA>::Ptr,
-                          pcl::PointCloud<pcl::Normal>::Ptr,
-                          pcl::PointCloud<pcl::PointXYZRGBA>::Ptr);
+void CylinderSegmentation();
 
-void PlaneSegmentation(pcl::PointCloud<pcl::PointXYZRGBA>::Ptr,
-                                        pcl::PointCloud<pcl::Normal>::Ptr,
-                                        std::vector<pcl::PointCloud<pcl::PointXYZRGBA>::Ptr> &,
-                                        std::vector<Eigen::Vector4f> &);
+void PlaneSegmentation();
+
+pcl::PointCloud <pcl::PointXYZRGB>::Ptr RegionGrowingMethod();
 
 void StairsAndPapesDetection();
 
 
-pcl::PointCloud<pcl::PointXYZRGBA>::Ptr GiveCloudPointer() const;
+pcl::PointCloud<PointT>::Ptr GiveCloudPointer() const;
 
-std::vector<pcl::PointCloud<pcl::PointXYZRGBA>::Ptr> GivePlanes() const;
+std::vector<pcl::PointCloud<PointT>::Ptr> GivePlanes() const;
 
- std::vector<Eigen::Vector4f> GiveCentroidPlanes() const;
+std::vector<Eigen::Vector4f> GiveCentroidPlanes() const;
 
 void PrintData();
 
-private:
-
- pcl::PointCloud<pcl::PointXYZRGBA>::Ptr _cloud;
- pcl::PointCloud<pcl::Normal>::Ptr cloud_normals;
- pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud_filtered;
- pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud_cylinder;
- std::vector<pcl::PointCloud<pcl::PointXYZRGBA>::Ptr> _planes;
- std::vector<Eigen::Vector4f> _centroid_planes;
 
 
 };
