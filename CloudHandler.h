@@ -48,6 +48,8 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr GiveColoredCloud() const;
 
 std::vector<pcl::PointCloud<PointT>::Ptr> GivePlanes() const;
 
+ pcl::PointCloud<pcl::Normal>::Ptr GiveNormals() const;
+
 std::vector<Eigen::Vector4f> GiveCentroidPlanes() const;
 
 void PrintData();

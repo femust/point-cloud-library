@@ -48,10 +48,24 @@ void CloudHandler::EstimatePointNormal()
     pcl::search::KdTree<CloudHandler::PointT>::Ptr tree (new pcl::search::KdTree<CloudHandler::PointT> ());
     pcl::NormalEstimation<CloudHandler::PointT, pcl::Normal> ne;
 
+
+
     ne.setSearchMethod (tree);
     ne.setInputCloud (cloud_filtered);
     ne.setKSearch (50);
+    Eigen::Vector4f plane_parameters;
+    float curvature;
+
+      //pcl::computePointNormal<CloudHandler::PointT> (*cloud_filtered, plane_parameters, curvature);
     ne.compute (*cloud_normals);
+//      std::cout << plane_parameters<<std::endl;
+//      std::cout << curvature << std::endl;
+//    std::cout<<"CHCE NORMAL" << std::endl;
+
+      std::cout << "    " << cloud_normals->points[0].normal_x
+                << " "    << cloud_normals->points[0].normal_y
+                << " "    << cloud_normals->points[0].normal_z << std::endl;
+
 }
 
 void CloudHandler::PlaneSegmentation()
@@ -187,10 +201,10 @@ void CloudHandler::RegionGrowingMethod()
      pcl::search::Search<CloudHandler::PointT>::Ptr tree = boost::shared_ptr<pcl::search::Search<CloudHandler::PointT> > (new pcl::search::KdTree<CloudHandler::PointT>);
      EstimatePointNormal();
      pcl::RegionGrowing<CloudHandler::PointT, pcl::Normal> reg;
-     reg.setMinClusterSize (500);
+     reg.setMinClusterSize (1000);
      reg.setMaxClusterSize (1000000);
      reg.setSearchMethod (tree);
-     reg.setNumberOfNeighbours (100);
+     reg.setNumberOfNeighbours (50);
      reg.setInputCloud (cloud_filtered);
      //reg.setIndices (indices);
      reg.setInputNormals (cloud_normals);
@@ -214,6 +228,7 @@ void CloudHandler::RegionGrowingMethod()
 
        pcl::compute3DCentroid (*cloud_filtered,*it, centroid);
       _centroid_planes.push_back(centroid);
+      std::cout << centroid;
 
    }
 
@@ -264,6 +279,11 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr CloudHandler::GiveColoredCloud() const
  std::vector<pcl::PointCloud<CloudHandler::PointT>::Ptr> CloudHandler::GivePlanes() const
  {
      return _planes;
+ }
+
+pcl::PointCloud<pcl::Normal>::Ptr CloudHandler::GiveNormals() const
+ {
+     return cloud_normals;
  }
 
  std::vector<Eigen::Vector4f> CloudHandler::GiveCentroidPlanes() const
