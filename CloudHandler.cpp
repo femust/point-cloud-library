@@ -6,7 +6,8 @@ CloudHandler::CloudHandler():_cloud{new pcl::PointCloud<CloudHandler::PointT>},
                                     cloud_filtered {new pcl::PointCloud<CloudHandler::PointT>},
                                     cloud_cylinder {new pcl::PointCloud<CloudHandler::PointT>},
                                   _planes {},
-                                 _centroid_planes {}
+                                 _centroid_planes {},
+                                _colored_cloud {new pcl::PointCloud <pcl::PointXYZRGB>}
 {}
 
 CloudHandler::~CloudHandler(){}
@@ -179,28 +180,17 @@ void CloudHandler::CylinderSegmentation()
 
 }
 
-//void CloudHandler::RegionGrowingMethod()
-//{
 
-
-
-
-
-//}
-
-
-pcl::PointCloud <pcl::PointXYZRGB>::Ptr CloudHandler::RegionGrowingMethod()
+void CloudHandler::RegionGrowingMethod()
 {
-
-
 
      pcl::search::Search<CloudHandler::PointT>::Ptr tree = boost::shared_ptr<pcl::search::Search<CloudHandler::PointT> > (new pcl::search::KdTree<CloudHandler::PointT>);
      EstimatePointNormal();
      pcl::RegionGrowing<CloudHandler::PointT, pcl::Normal> reg;
-     reg.setMinClusterSize (50);
+     reg.setMinClusterSize (500);
      reg.setMaxClusterSize (1000000);
      reg.setSearchMethod (tree);
-     reg.setNumberOfNeighbours (30);
+     reg.setNumberOfNeighbours (100);
      reg.setInputCloud (cloud_filtered);
      //reg.setIndices (indices);
      reg.setInputNormals (cloud_normals);
@@ -210,11 +200,24 @@ pcl::PointCloud <pcl::PointXYZRGB>::Ptr CloudHandler::RegionGrowingMethod()
      std::vector <pcl::PointIndices> clusters;
      reg.extract (clusters);
 
-     std::cout << "Number of clusters is equal to " << clusters.size () << std::endl;
-     std::cout << "First cluster has " << clusters[0].indices.size () << " points." << endl;
-    pcl::PointCloud <pcl::PointXYZRGB>::Ptr colored_cloud = reg.getColoredCloud ();
-return colored_cloud;
 
+
+//     std::cout << "First cluster has " << clusters[0] << " points." << endl;
+
+//        std::cout << "Number of clusters is equal to " << clusters[0].indices.size() << std::endl;
+
+   Eigen::Vector4f centroid;
+
+   for (auto it=clusters.begin();it!=clusters.end();it++)
+   {
+       std::cout << it->indices.size() << std::endl;
+
+       pcl::compute3DCentroid (*cloud_filtered,*it, centroid);
+      _centroid_planes.push_back(centroid);
+
+   }
+
+     _colored_cloud = reg.getColoredCloud ();
 
 }
 
@@ -223,13 +226,23 @@ return colored_cloud;
 void CloudHandler::StairsAndPapesDetection()
 {
 
- //pcl::PointCloud<CloudHandler::PointT>::Ptr cloud_plane (new pcl::PointCloud<CloudHandler::PointT> ());
- FilterCloud();
- EstimatePointNormal();
- PlaneSegmentation();
+    switch(mode_) {
+        case GRAPH:
+            RegionGrowingMethod();
+            break;
+        case SEPARATE:
+            FilterCloud();
+            EstimatePointNormal();
+            PlaneSegmentation();
+            std::cout << "HERE WILL BE SMTH";
+        break;
+            }
 
- std::cout << "NUMBER OF PLANES" << _planes.size() << std::endl;
- std::cout << "NUMBER OF POINTS" << _centroid_planes.size() << std::endl;
+
+
+            //pcl::PointCloud<CloudHandler::PointT>::Ptr cloud_plane (new pcl::PointCloud<CloudHandler::PointT> ());
+// std::cout << "NUMBER OF PLANES" << _planes.size() << std::endl;
+// std::cout << "NUMBER OF POINTS" << _centroid_planes.size() << std::endl;
  //CylinderSegmentation(cloud_filtered,cloud_normals,cloud_cylinder);
  //std::cout << "DRUGI " << planes.size() << std::endl;
 
@@ -241,6 +254,11 @@ void CloudHandler::StairsAndPapesDetection()
 pcl::PointCloud<CloudHandler::PointT>::Ptr CloudHandler::GiveCloudPointer() const
  {
      return _cloud;
+ }
+
+pcl::PointCloud<pcl::PointXYZRGB>::Ptr CloudHandler::GiveColoredCloud() const
+ {
+     return _colored_cloud;
  }
 
  std::vector<pcl::PointCloud<CloudHandler::PointT>::Ptr> CloudHandler::GivePlanes() const

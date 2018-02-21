@@ -11,8 +11,6 @@
 
 typedef pcl::PointXYZRGBA PointT;
 
-
-
 int main(int argc, char* argv[])
 {
     if (argc<2)
@@ -21,21 +19,44 @@ int main(int argc, char* argv[])
         return 0;
     }
 
-pcl::visualization::CloudViewer viewer ("Cluster viewer");
+    boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer (new pcl::visualization::PCLVisualizer ("3D Viewer"));
+    CloudHandler stairCloud;
+    float index;
+    PointT o;
+    std::vector<Eigen::Vector4f> centers;
+
+    stairCloud.GraspCloud(std::string(argv[1]));
+    stairCloud.StairsAndPapesDetection();
 
 
 
-CloudHandler stairCloud;
-pcl::PointCloud <pcl::PointXYZRGB>::Ptr colored_cloud;
+    int v1 = 0;
+    viewer->createViewPort (0.0, 0.0, 0.5, 1.0, v1);
+    viewer->setBackgroundColor (1.0, 1.0, 1.0, v1);
+   viewer->addPointCloud<pcl::PointXYZRGBA> (stairCloud.GiveCloudPointer(),"view", v1);
+    viewer->addCoordinateSystem (1);
 
 
+    int v2=0;
+    viewer->createViewPort (0.5, 0.0, 1.0, 1.0, v2);
+    viewer->setBackgroundColor (1, 1, 1, v2);
+    viewer->addCoordinateSystem (0.5);
+    viewer->addPointCloud(stairCloud.GiveColoredCloud(),"sample",v2);
+    centers =stairCloud.GiveCentroidPlanes();
 
-stairCloud.GraspCloud(std::string(argv[1]));
-colored_cloud=stairCloud.RegionGrowingMethod();
-
-viewer.showCloud(colored_cloud);
-while (!viewer.wasStopped ())
+for (auto it=centers.begin(); it != centers.end();++it)
 {
+    index = centers.begin() - it;
+    o.x = (*it)[0];
+    o.y = (*it)[1];
+    o.z = (*it)[2];
+    viewer->addSphere (o, 0.02, 250, 0, 0,std::to_string(index),v2);
+}
+
+while (!viewer->wasStopped ())
+{
+    viewer->spinOnce (100);
+      boost::this_thread::sleep (boost::posix_time::microseconds (100000));
 }
 
 
@@ -57,10 +78,7 @@ while (!viewer.wasStopped ())
 
 
 
-//int v2=0;
-//viewer->createViewPort (0.5, 0.0, 1.0, 1.0, v2);
-//viewer->setBackgroundColor (1, 1, 1, v2);
-//viewer->addCoordinateSystem (0.5);
+
 
 //for (auto it=SegmentedPlanes.begin(); it != SegmentedPlanes.end();++it)
 //{
@@ -103,11 +121,7 @@ while (!viewer.wasStopped ())
 
 
 
-//while (!viewer->wasStopped ())
-//{
-//    viewer->spinOnce (100);
-//    boost::this_thread::sleep (boost::posix_time::microseconds (100000));
-//}
+
 return 0;
 
 }
