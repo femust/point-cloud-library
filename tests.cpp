@@ -58,7 +58,7 @@ main (int argc, char** argv)
 
   int i = 0, nr_points = (int) cloud_filtered->points.size ();
   // While 30% of the original cloud is still there
-  while (cloud_filtered->points.size () > 0.1 * nr_points)
+  while (cloud_filtered->points.size () > 0.3 * nr_points)
   {
     // Segment the largest planar component from the remaining cloud
     seg.setInputCloud (cloud_filtered);
