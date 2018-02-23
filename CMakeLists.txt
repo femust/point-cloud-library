@@ -12,7 +12,7 @@ include_directories(${PCL_INCLUDE_DIRS})
 link_directories(${PCL_LIBRARY_DIRS})
 add_definitions(${PCL_DEFINITIONS})
 
-
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 add_executable(${PROJECT_NAME} main.cpp CloudHandler.cpp)
 target_link_libraries (${PROJECT_NAME}  ${PCL_LIBRARIES})

@@ -14,11 +14,10 @@ CloudHandler::~CloudHandler(){}
 
 void CloudHandler::GraspCloud(const std::string pathToCloud)
 {
-   // pcl::io::loadPCDFile (pathToCloud, *_cloud);
-
     pcl::PCDReader reader;
     reader.read (pathToCloud, *_cloud);
     cloud_filtered=_cloud;
+
     std::cerr << "READING FROM FILE: " << pathToCloud << " " << _cloud->points.size () << std::endl <<std::endl;
 }
 
@@ -27,7 +26,9 @@ void CloudHandler::FilterCloud()
     pcl::PassThrough<CloudHandler::PointT> pass;
     pcl::PCLPointCloud2::Ptr cloud_blob (new pcl::PCLPointCloud2), cloud_filtered_blob (new pcl::PCLPointCloud2);
     pcl::toPCLPointCloud2(*_cloud,*cloud_blob);
-    std::cerr << "PointCloud before filtering: " << cloud_blob->width * cloud_blob->height << " data points." << std::endl;
+
+    std::cerr << "PointCloud before filtering: " << cloud_filtered->points.size() << " data points." << std::endl;
+
     //pass.setInputCloud (_cloud);
     //pass.setFilterFieldName ("z");
     //pass.setFilterLimits (0, 1.5);
@@ -38,8 +39,9 @@ void CloudHandler::FilterCloud()
     sor.setInputCloud (cloud_blob);
     sor.setLeafSize (0.01f, 0.01f, 0.01f);
     sor.filter (*cloud_filtered_blob);
-     pcl::fromPCLPointCloud2 (*cloud_filtered_blob, *cloud_filtered);
-    std::cerr << "PointCloud after filtering: " << cloud_filtered->width * cloud_filtered->height << " data points." << std::endl;
+    pcl::fromPCLPointCloud2 (*cloud_filtered_blob, *cloud_filtered);
+    std::cerr << "PointCloud after filtering: " << cloud_filtered->points.size() << " data points." << std::endl;
+
 
 }
 
@@ -53,18 +55,10 @@ void CloudHandler::EstimatePointNormal()
     ne.setSearchMethod (tree);
     ne.setInputCloud (cloud_filtered);
     ne.setKSearch (50);
-    Eigen::Vector4f plane_parameters;
-    float curvature;
-
-      //pcl::computePointNormal<CloudHandler::PointT> (*cloud_filtered, plane_parameters, curvature);
     ne.compute (*cloud_normals);
-//      std::cout << plane_parameters<<std::endl;
-//      std::cout << curvature << std::endl;
-//    std::cout<<"CHCE NORMAL" << std::endl;
 
-      std::cout << "    " << cloud_normals->points[0].normal_x
-                << " "    << cloud_normals->points[0].normal_y
-                << " "    << cloud_normals->points[0].normal_z << std::endl;
+ //std::cout << CloudHandler::_horizontalLimit <<" " << CloudHandler::_verticalLimit;
+
 
 }
 
@@ -197,43 +191,88 @@ void CloudHandler::CylinderSegmentation()
 
 void CloudHandler::RegionGrowingMethod()
 {
-
      pcl::search::Search<CloudHandler::PointT>::Ptr tree = boost::shared_ptr<pcl::search::Search<CloudHandler::PointT> > (new pcl::search::KdTree<CloudHandler::PointT>);
-     EstimatePointNormal();
      pcl::RegionGrowing<CloudHandler::PointT, pcl::Normal> reg;
+     pcl::PCA<CloudHandler::PointT> principal;//(&cloud_filtered);
+
      reg.setMinClusterSize (1000);
      reg.setMaxClusterSize (1000000);
      reg.setSearchMethod (tree);
      reg.setNumberOfNeighbours (50);
      reg.setInputCloud (cloud_filtered);
-     //reg.setIndices (indices);
      reg.setInputNormals (cloud_normals);
      reg.setSmoothnessThreshold (3.0 / 180.0 * M_PI);
      reg.setCurvatureThreshold (1.0);
 
-     std::vector <pcl::PointIndices> clusters;
-     reg.extract (clusters);
+     //boost::shared_ptr<std::vector <pcl::PointIndices>> clusters {new <std::vector<pcl::PointIndices()>>};
+
+
+     std::vector<pcl::PointIndices> clusters;
 
 
 
-//     std::cout << "First cluster has " << clusters[0] << " points." << endl;
+    pcl::PointIndices::Ptr inliers (new pcl::PointIndices ());
+    // std::vector <pcl::PointIndices> clusters;
+     std::vector <Eigen::Matrix3f> EigenVetors;
+     std::vector <Eigen::Vector3f> EigenValues;
 
-//        std::cout << "Number of clusters is equal to " << clusters[0].indices.size() << std::endl;
 
-   Eigen::Vector4f centroid;
 
-   for (auto it=clusters.begin();it!=clusters.end();it++)
-   {
-       std::cout << it->indices.size() << std::endl;
 
-       pcl::compute3DCentroid (*cloud_filtered,*it, centroid);
-      _centroid_planes.push_back(centroid);
-      std::cout << centroid;
+    reg.extract (clusters);
+    //reg.extract(clusters);
 
-   }
+    auto mSharedPtr = std::make_shared<std::vector<pcl::PointIndices>>(clusters);
 
+
+
+
+    for (auto it=clusters.begin(); it!=clusters.end() ; it++)
+    {
+
+         pcl::PointIndices::Ptr inliers (new pcl::PointIndices (*it));
+
+
+
+
+        principal.setIndices(inliers);
+      principal.setInputCloud(cloud_filtered);
+      Eigen::Vector3f a= principal.getEigenValues();
+      std::cout << a << std::endl;
+//        EigenValues.push_back(principal.getEigenValues());
+//        EigenVetors.push_back(principal.getEigenVectors());
+//        std::cout << EigenValues[0];
+
+    }
+
+
+
+
+
+////     std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!" << cloud_normals->points.size() << std::endl;
+
+//     for(pcl::PointCloud<pcl::Normal>::iterator it = cloud_normals->begin(); it!= cloud_normals->end(); it++){
+//         if ((fabs(it->normal_z) <= CloudHandler::_horizontalLimit) || (fabs(it->normal_z)>=CloudHandler::_verticalLimit))
+//         {
+////             std::cout << it->normal_z << " ABS " << fabs(it->normal_z) << std::endl;
+//         }
+
+
+//      }
+//      std::cout << "AFTER ERASE" << cloud_normals->points.size() << std::endl;
+
+//     std::cout << cos(CloudHandler::_verticalLimit) <<std::endl;
+
+
+
+     Eigen::Vector4f centroid;
+     for (auto it=(clusters).begin();it!=(clusters).end();it++)
+     {
+        std::cout << it->indices.size() << std::endl;
+        pcl::compute3DCentroid (*cloud_filtered,*it, centroid);
+        _centroid_planes.push_back(centroid);
+     }
      _colored_cloud = reg.getColoredCloud ();
-
 }
 
 
@@ -241,29 +280,26 @@ void CloudHandler::RegionGrowingMethod()
 void CloudHandler::StairsAndPapesDetection()
 {
 
-    switch(mode_) {
+    switch(mode_)
+    {
         case GRAPH:
+            FilterCloud();
+            EstimatePointNormal();
             RegionGrowingMethod();
             break;
+
         case SEPARATE:
             FilterCloud();
             EstimatePointNormal();
             PlaneSegmentation();
-            std::cout << "HERE WILL BE SMTH";
+
         break;
-            }
+    }
 
 
 
-            //pcl::PointCloud<CloudHandler::PointT>::Ptr cloud_plane (new pcl::PointCloud<CloudHandler::PointT> ());
-// std::cout << "NUMBER OF PLANES" << _planes.size() << std::endl;
-// std::cout << "NUMBER OF POINTS" << _centroid_planes.size() << std::endl;
- //CylinderSegmentation(cloud_filtered,cloud_normals,cloud_cylinder);
- //std::cout << "DRUGI " << planes.size() << std::endl;
 
 }
-
-
 
 
 pcl::PointCloud<CloudHandler::PointT>::Ptr CloudHandler::GiveCloudPointer() const
@@ -290,12 +326,6 @@ pcl::PointCloud<pcl::Normal>::Ptr CloudHandler::GiveNormals() const
  {
      return _centroid_planes;
  }
-
-
-
-
-
-
 
 void CloudHandler::PrintData()
 {

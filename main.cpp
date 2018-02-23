@@ -13,6 +13,19 @@ typedef pcl::PointXYZRGBA PointT;
 
 int main(int argc, char* argv[])
 {
+
+
+    //    using namespace std;
+    //    vector<int>numbers = {4,5,3,2,5,42};
+
+
+
+    //    for (vector<int>::iterator it = numbers.begin(); it!=numbers.end(); it++){
+    //        cout << *it << endl;
+    //        cout << &it << endl;
+    //        cout << &(*it->indices) << endl;
+    //    }
+
     if (argc<2)
     {
         std::cerr << "\033[1;31mGIVE ME A FILE\033[0m\n"<<std::endl;
@@ -31,15 +44,17 @@ int main(int argc, char* argv[])
     int v1 = 0;
     viewer->createViewPort (0.0, 0.0, 0.5, 1.0, v1);
     viewer->setBackgroundColor (1.0, 1.0, 1.0, v1);
-    viewer->addPointCloud<pcl::PointXYZRGBA> (stairCloud.GiveCloudPointer(),"view", v1);
+    viewer->addCoordinateSystem(1,0,0,0,"global",v1);
+    viewer->addPointCloud<PointT> (stairCloud.GiveCloudPointer(),"view", v1);
 
-    viewer->addCoordinateSystem (1);
+
+
 
 
     int v2=0;
     viewer->createViewPort (0.5, 0.0, 1.0, 1.0, v2);
     viewer->setBackgroundColor (1, 1, 1, v2);
-    viewer->addCoordinateSystem (0.5);
+    viewer->addCoordinateSystem (1);
     viewer->addPointCloud(stairCloud.GiveColoredCloud(),"sample",v2);
     //viewer->addPointCloudNormals<pcl::PointXYZRGB,pcl::Normal>(stairCloud.GiveColoredCloud(),stairCloud.GiveNormals(),100,0.2,"normal",v2);
     centers =stairCloud.GiveCentroidPlanes();

@@ -1,6 +1,9 @@
 #ifndef CLOUDHANDLER_H
 #define CLOUDHANDLER_H
 
+#include <iostream>
+
+#include <cmath>
 
 #include <pcl/io/pcd_io.h>
 #include <pcl/filters/passthrough.h>
@@ -16,7 +19,11 @@
 #include <pcl/features/normal_3d.h>
 #include <pcl/filters/voxel_grid.h>
 #include <pcl/segmentation/region_growing.h>
+#include <pcl/common/pca.h>
 
+
+
+#include <typeinfo>
 
 
 class CloudHandler {
@@ -56,6 +63,7 @@ void PrintData();
 
 enum Mode {GRAPH = 0,SEPARATE};
 
+
 private:
 
  Mode mode_ = GRAPH;
@@ -65,10 +73,11 @@ private:
  pcl::PointCloud<PointT>::Ptr cloud_cylinder;
  pcl::PointCloud <pcl::PointXYZRGB>::Ptr _colored_cloud;
 
-
  std::vector<pcl::PointCloud<PointT>::Ptr> _planes;
  std::vector<Eigen::Vector4f> _centroid_planes;
 
+ double _verticalLimit = cos(15.0/ 180.0 * M_PI);
+ double _horizontalLimit = cos(75.0/ 180.0 * M_PI);
 };
 
 
