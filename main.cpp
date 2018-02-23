@@ -48,9 +48,6 @@ int main(int argc, char* argv[])
     viewer->addPointCloud<PointT> (stairCloud.GiveCloudPointer(),"view", v1);
 
 
-
-
-
     int v2=0;
     viewer->createViewPort (0.5, 0.0, 1.0, 1.0, v2);
     viewer->setBackgroundColor (1, 1, 1, v2);

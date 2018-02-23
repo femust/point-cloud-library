@@ -211,9 +211,9 @@ void CloudHandler::RegionGrowingMethod()
 
 
 
-    pcl::PointIndices::Ptr inliers (new pcl::PointIndices ());
+    std::vector<pcl::PointIndices::Ptr> inliers_vec;
     // std::vector <pcl::PointIndices> clusters;
-     std::vector <Eigen::Matrix3f> EigenVetors;
+     std::vector <Eigen::Matrix3f> EigenVectors;
      std::vector <Eigen::Vector3f> EigenValues;
 
 
@@ -222,56 +222,52 @@ void CloudHandler::RegionGrowingMethod()
     reg.extract (clusters);
     //reg.extract(clusters);
 
-    auto mSharedPtr = std::make_shared<std::vector<pcl::PointIndices>>(clusters);
+    //auto mSharedPtr = std::make_shared<std::vector<pcl::PointIndices>>(clusters);
 
+    int maxEigen;
+    int minEigen;
+    int midEigen;
+    Eigen::Matrix3f checkEigenVector;
+    Eigen::Vector3f checkEigenValue;
 
-
+    float max=0,min=0;
+  Eigen::Vector4f centroid;
 
     for (auto it=clusters.begin(); it!=clusters.end() ; it++)
     {
-
-         pcl::PointIndices::Ptr inliers (new pcl::PointIndices (*it));
-
-
-
-
-        principal.setIndices(inliers);
+      pcl::PointIndices::Ptr inliers (new pcl::PointIndices (*it));
+      principal.setIndices(inliers);
       principal.setInputCloud(cloud_filtered);
-      Eigen::Vector3f a= principal.getEigenValues();
-      std::cout << a << std::endl;
-//        EigenValues.push_back(principal.getEigenValues());
-//        EigenVetors.push_back(principal.getEigenVectors());
-//        std::cout << EigenValues[0];
 
+      checkEigenVector=principal.getEigenVectors();
+      checkEigenValue=principal.getEigenValues();
+
+//      max = checkEigenValue.maxCoeff(&maxEigen);
+//      min = checkEigenValue.minCoeff(&minEigen);
+
+//      for(pcl::PointCloud<pcl::Normal>::iterator it = cloud_normals->begin(); it!= cloud_normals->end(); it++){
+          std::cout << "NEW POINT CLOUD: " << checkEigenVector.row(0)<<std::endl;
+               if ((fabs(checkEigenVector.row(0)(2)) <= CloudHandler::_horizontalLimit) || (fabs(checkEigenVector.row(0)(2))>=CloudHandler::_verticalLimit))
+               {
+                 std::cout << checkEigenVector.row(0)(2) << " ABS " << fabs(checkEigenVector.row(0)(2)) << std::endl;
+
+                 EigenValues.push_back(checkEigenValue);
+                 EigenVectors.push_back(checkEigenVector);
+                 inliers_vec.push_back(inliers);
+
+                 pcl::compute3DCentroid (*cloud_filtered,*it, centroid);
+                 _centroid_planes.push_back(centroid);
+               }
+               else
+               {
+                   std::cout << std::endl;
+                   std::cout << "POINT CLOUD REJECTED"<<std::endl;
+                   std::cout << std::endl;
+               }
     }
 
 
 
-
-
-////     std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!" << cloud_normals->points.size() << std::endl;
-
-//     for(pcl::PointCloud<pcl::Normal>::iterator it = cloud_normals->begin(); it!= cloud_normals->end(); it++){
-//         if ((fabs(it->normal_z) <= CloudHandler::_horizontalLimit) || (fabs(it->normal_z)>=CloudHandler::_verticalLimit))
-//         {
-////             std::cout << it->normal_z << " ABS " << fabs(it->normal_z) << std::endl;
-//         }
-
-
-//      }
-//      std::cout << "AFTER ERASE" << cloud_normals->points.size() << std::endl;
-
-//     std::cout << cos(CloudHandler::_verticalLimit) <<std::endl;
-
-
-
-     Eigen::Vector4f centroid;
-     for (auto it=(clusters).begin();it!=(clusters).end();it++)
-     {
-        std::cout << it->indices.size() << std::endl;
-        pcl::compute3DCentroid (*cloud_filtered,*it, centroid);
-        _centroid_planes.push_back(centroid);
-     }
      _colored_cloud = reg.getColoredCloud ();
 }
 
