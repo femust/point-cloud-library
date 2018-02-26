@@ -29,33 +29,36 @@
 class CloudHandler {
 public:
 typedef pcl::PointXYZRGBA PointT;
+typedef pcl::PointCloud<PointT> PointCloud;
+typedef pcl::PointCloud<pcl::Normal> SurfaceNormals;
 
 
 CloudHandler();
 ~CloudHandler();
 
 void GraspCloud(const std::string);
+void GraspCloud(PointCloud::Ptr);
 
 void FilterCloud();
 
 void EstimatePointNormal();
 
-void CylinderSegmentation();
+//void CylinderSegmentation();
 
-void PlaneSegmentation();
+//void PlaneSegmentation();
 
 void RegionGrowingMethod();
 
 void StairsAndPapesDetection();
 
 
-pcl::PointCloud<PointT>::Ptr GiveCloudPointer() const;
+PointCloud::Ptr GiveCloudPointer() const;
 
 pcl::PointCloud<pcl::PointXYZRGB>::Ptr GiveColoredCloud() const;
 
 std::vector<pcl::PointCloud<PointT>::Ptr> GivePlanes() const;
 
- pcl::PointCloud<pcl::Normal>::Ptr GiveNormals() const;
+SurfaceNormals::Ptr GiveNormals() const;
 
 std::vector<Eigen::Vector4f> GiveCentroidPlanes() const;
 
@@ -67,13 +70,15 @@ enum Mode {GRAPH = 0,SEPARATE};
 private:
 
  Mode mode_ = GRAPH;
- pcl::PointCloud<PointT>::Ptr _cloud;
- pcl::PointCloud<pcl::Normal>::Ptr cloud_normals;
- pcl::PointCloud<PointT>::Ptr cloud_filtered;
- pcl::PointCloud<PointT>::Ptr cloud_cylinder;
- pcl::PointCloud <pcl::PointXYZRGB>::Ptr _colored_cloud;
+ PointCloud::Ptr _cloud;
+ PointCloud::Ptr cloud_filtered;
+ PointCloud::Ptr cloud_cylinder;
+ SurfaceNormals::Ptr cloud_normals;
 
- std::vector<pcl::PointCloud<PointT>::Ptr> _planes;
+
+ pcl::PointCloud<pcl::PointXYZRGB>::Ptr _colored_cloud;
+
+ std::vector<PointCloud::Ptr> _planes;
  std::vector<Eigen::Vector4f> _centroid_planes;
 
  double _verticalLimit = cos(15.0/ 180.0 * M_PI);
