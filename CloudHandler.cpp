@@ -196,10 +196,10 @@ void CloudHandler::RegionGrowingMethod()
      pcl::RegionGrowing<CloudHandler::PointT, pcl::Normal> reg;
      pcl::PCA<CloudHandler::PointT> principal;//(&cloud_filtered);
 
-     reg.setMinClusterSize (30); //was 1000
+     reg.setMinClusterSize (20); //was 1000
      reg.setMaxClusterSize (1000000);
      reg.setSearchMethod (tree);
-     reg.setNumberOfNeighbours (50);
+     reg.setNumberOfNeighbours (10); //was50
      reg.setInputCloud (cloud_filtered);
      reg.setInputNormals (cloud_normals);
      reg.setSmoothnessThreshold (3.0 / 180.0 * M_PI);
@@ -207,10 +207,10 @@ void CloudHandler::RegionGrowingMethod()
 
      //boost::shared_ptr<std::vector <pcl::PointIndices>> clusters {new <std::vector<pcl::PointIndices()>>};
 
-     std::vector<pcl::PointIndices> clusters;
-     std::vector<pcl::PointIndices::Ptr> inliers_vec;
-     std::vector <Eigen::Matrix3f> EigenVectors;
-     std::vector <Eigen::Vector3f> EigenValues;
+//     std::vector<pcl::PointIndices> clusters;
+//     std::vector<pcl::PointIndices::Ptr> eigen_inliers;
+//     std::vector <Eigen::Matrix3f> EigenVectors;
+//     std::vector <Eigen::Vector3f> EigenValues;
 
     int maxEigen;
     int minEigen;
@@ -226,8 +226,41 @@ void CloudHandler::RegionGrowingMethod()
     for (auto it=clusters.begin(); it!=clusters.end() ; it++)
     {
       pcl::PointIndices::Ptr inliers (new pcl::PointIndices (*it));
+      PointCloud projectedToEigenSpace;
+
       principal.setIndices(inliers);
       principal.setInputCloud(cloud_filtered);
+
+
+      //TEST
+      principal.project(*cloud_filtered,projectedToEigenSpace);
+
+      std::cout << "BANANA " << projectedToEigenSpace.size() << std::endl;
+
+      CloudHandler::PointT minPt, maxPt;
+
+      float depth;
+      float width;
+
+
+      pcl::getMinMax3D (projectedToEigenSpace, minPt, maxPt);
+
+      std::cout << " MIN " << minPt << std::endl;
+      std::cout << " MAX " << maxPt << std::endl;
+
+      depth=maxPt.x+fabs(minPt.x);
+      width=maxPt.y+fabs(minPt.y);
+
+
+      std::cout << "DEPTH OF THE STEP " << depth << std::endl;
+      std::cout << "WIDTH OF THE STEP " <<width << std::endl;
+
+
+
+      ///END OF TEST
+
+
+
 
       checkEigenVector=principal.getEigenVectors();
       checkEigenValue=principal.getEigenValues();
@@ -237,14 +270,22 @@ void CloudHandler::RegionGrowingMethod()
 
 //      for(pcl::PointCloud<pcl::Normal>::iterator it = cloud_normals->begin(); it!= cloud_normals->end(); it++)
 //      {
-          std::cout << "NEW POINT CLOUD: " << checkEigenVector.row(0)<<std::endl;
+      std::cout << "EIGENVALUE"<< checkEigenValue << std::endl;
+      std::cout << "VECTOR" << checkEigenVector << std::endl;
+          std::cout << "EIGENVECTOR 0: " << checkEigenVector.row(0)<<std::endl;
+          std::cout << "EIGENVECTOR 1: " << checkEigenVector.row(1)<<std::endl;
+          std::cout << "EIGENVECTOR 2: " << checkEigenVector.row(2)<<std::endl;
+          std::cout << "EIGENVALUES 0: " << checkEigenValue.row(0)<<std::endl;
+          std::cout << "EIGENVALUES 1: " << checkEigenValue.row(1)<<std::endl;
+          std::cout << "EIGENVALUES 2: " << checkEigenValue.row(2)<<std::endl;
+
                if ((fabs(checkEigenVector.row(0)(2)) <= CloudHandler::_horizontalLimit) || (fabs(checkEigenVector.row(0)(2))>=CloudHandler::_verticalLimit))
                {
-                 std::cout << checkEigenVector.row(0)(2) << " ABS " << fabs(checkEigenVector.row(0)(2)) << std::endl;
+                // std::cout << "EIGENVECTOR WITH HORIZONTAL/VERTICAL CONSTRAINTS: " << checkEigenVector.row(0)(2) << " ABS " << fabs(checkEigenVector.row(0)(2)) << std::endl;
 
                  EigenValues.push_back(checkEigenValue);
                  EigenVectors.push_back(checkEigenVector);
-                 inliers_vec.push_back(inliers);
+                 eigen_inliers.push_back(inliers);
 
                  pcl::compute3DCentroid (*cloud_filtered,*it, centroid);
                  _centroid_planes.push_back(centroid);
@@ -256,7 +297,6 @@ void CloudHandler::RegionGrowingMethod()
                    std::cout << std::endl;
                }
     }
-
     std::cout << "NUMBERS OF CENTERS " << _centroid_planes.size()<< std::endl;
 
     _colored_cloud =  pcl::PointCloud<pcl::PointXYZRGB>::Ptr (new pcl::PointCloud <pcl::PointXYZRGB>);
@@ -271,7 +311,7 @@ void CloudHandler::StairsAndPapesDetection()
     switch(mode_)
     {
         case GRAPH:
-            FilterCloud();
+           // FilterCloud();
             EstimatePointNormal();
             RegionGrowingMethod();
             break;

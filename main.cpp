@@ -32,23 +32,57 @@ int main(int argc, char* argv[])
 //        return 0;
 //    }
 
-    pcl::PointCloud<PointT>::Ptr cloud {new pcl::PointCloud<PointT>};
-    cloud->width    = 10;
-    cloud->height   = 10;
-    cloud->is_dense = false;
-    cloud->points.resize (cloud->width * cloud->height);
+    pcl::PointCloud<PointT>::Ptr cloud_a {new pcl::PointCloud<PointT>};
+    cloud_a->width    = 10;
+    cloud_a->height   = 5;
+    cloud_a->is_dense = false;
+    cloud_a->points.resize (cloud_a->width * cloud_a->height);
 
-  std::cout << "SIZE"  << cloud->size() << " HEIGHT " << cloud->height << " WIDTH " << cloud->width <<std::endl;
+  std::cout << "cloud_a"  << cloud_a->size() << " HEIGHT " << cloud_a->height << " WIDTH " << cloud_a->width <<std::endl;
 
-    for (size_t i = 0; i < cloud->size() ; ++i)
+    for (size_t i = 0; i < cloud_a->size() ; ++i)
      {
 
-       cloud->points[i].x = 0;
-       cloud->points[i].y = (i%10)+1;
+       cloud_a->points[i].x = int(i/10);
 
-       cloud->points[i].z = int(1+i/10);
+       cloud_a->points[i].y = 0;
+
+       cloud_a->points[i].z = (i%5);
 
     }
+
+    pcl::PointCloud<PointT>::Ptr cloud_b {new pcl::PointCloud<PointT>};
+    cloud_b->width    = 10;
+    cloud_b->height   = 5;
+    cloud_b->is_dense = false;
+    cloud_b->points.resize (cloud_b->width * cloud_b->height);
+
+  std::cout << "cloud_b"  << cloud_b->size() << " HEIGHT " << cloud_b->height << " WIDTH " << cloud_b->width <<std::endl;
+
+    for (size_t i = 0; i < cloud_b->size() ; ++i)
+     {
+
+       cloud_b->points[i].x = int(i/10);
+       cloud_b->points[i].y = (i%5);
+
+       cloud_b->points[i].z = -10;
+
+    }
+
+
+      pcl::PointCloud<PointT>::Ptr cloud {new pcl::PointCloud<PointT>};
+
+      //pcl::concatenatePointCloud(*cloud_a,*cloud_b,*cloud);
+      cloud->width    = 20;
+      cloud->height   = 10;
+      cloud->is_dense = false;
+ cloud->points.resize (cloud_b->width * cloud_b->height);
+      *cloud=*cloud_a+*cloud_b;
+      std::cout << "CONCATENATED CLOUD " << cloud->size() << std::endl;
+
+
+
+
 
 
 
@@ -60,7 +94,7 @@ int main(int argc, char* argv[])
 
    // stairCloud.GraspCloud(std::string(argv[1]));
     stairCloud.GraspCloud(cloud);
-    stairCloud.PrintData();
+    //stairCloud.PrintData();
 
    stairCloud.StairsAndPapesDetection();
 
@@ -79,8 +113,9 @@ int main(int argc, char* argv[])
     viewer->addCoordinateSystem (1);
     viewer->addPointCloud(stairCloud.GiveColoredCloud(),"sample",v2);
     viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 10, "sample");
-////    viewer->addPointCloudNormals<pcl::PointXYZRGB,pcl::Normal>(stairCloud.GiveColoredCloud(),stairCloud.GiveNormals(),100,0.2,"normal",v2);
-
+   viewer->addPointCloudNormals<pcl::PointXYZRGB,pcl::Normal>(stairCloud.GiveColoredCloud(),stairCloud.GiveNormals(),1,5,"normal",v2);
+    viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_COLOR,1.0,0,0 , "normal");
+//     viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_LINE_WIDTH, 100, "normal");
 
 
 

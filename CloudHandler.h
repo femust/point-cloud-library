@@ -20,6 +20,10 @@
 #include <pcl/filters/voxel_grid.h>
 #include <pcl/segmentation/region_growing.h>
 #include <pcl/common/pca.h>
+#include <pcl/common/common.h>
+#include <iostream>
+#include <pcl/io/pcd_io.h>
+#include <pcl/point_types.h>
 
 
 
@@ -83,6 +87,14 @@ private:
 
  double _verticalLimit = cos(15.0/ 180.0 * M_PI);
  double _horizontalLimit = cos(75.0/ 180.0 * M_PI);
+
+
+ std::vector<pcl::PointIndices> clusters;
+ std::vector<pcl::PointIndices::Ptr> eigen_inliers;
+ std::vector <Eigen::Matrix3f> EigenVectors;
+ std::vector <Eigen::Vector3f> EigenValues;
+
+
 };
 
 
