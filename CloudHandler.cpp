@@ -54,7 +54,7 @@ void CloudHandler::EstimatePointNormal()
 
     ne.setSearchMethod (tree);
     ne.setInputCloud (cloud_filtered);
-    ne.setKSearch (50);
+    ne.setKSearch (25);
     ne.compute (*cloud_normals);
 
     //std::cout << CloudHandler::_horizontalLimit <<" " << CloudHandler::_verticalLimit;
@@ -196,10 +196,10 @@ void CloudHandler::RegionGrowingMethod()
      pcl::RegionGrowing<CloudHandler::PointT, pcl::Normal> reg;
      pcl::PCA<CloudHandler::PointT> principal;//(&cloud_filtered);
 
-     reg.setMinClusterSize (20); //was 1000
+     reg.setMinClusterSize (100); //was 1000
      reg.setMaxClusterSize (1000000);
      reg.setSearchMethod (tree);
-     reg.setNumberOfNeighbours (10); //was50
+     reg.setNumberOfNeighbours (50); //was50
      reg.setInputCloud (cloud_filtered);
      reg.setInputNormals (cloud_normals);
      reg.setSmoothnessThreshold (3.0 / 180.0 * M_PI);
@@ -221,8 +221,8 @@ void CloudHandler::RegionGrowingMethod()
     Eigen::Vector4f centroid;
 
     reg.extract (clusters);
-    std::cout << "number of clusters" << clusters.size() << std::endl;
-
+    std::cout << "number of clusters found " << clusters.size() << std::endl;
+  int numberRejectedClusters=0;
     for (auto it=clusters.begin(); it!=clusters.end() ; it++)
     {
       pcl::PointIndices::Ptr inliers (new pcl::PointIndices (*it));
@@ -232,33 +232,20 @@ void CloudHandler::RegionGrowingMethod()
       principal.setInputCloud(cloud_filtered);
 
 
-      //TEST
-      principal.project(*cloud_filtered,projectedToEigenSpace);
-
-      std::cout << "BANANA " << projectedToEigenSpace.size() << std::endl;
-
-      CloudHandler::PointT minPt, maxPt;
-
-      float depth;
-      float width;
-
-
-      pcl::getMinMax3D (projectedToEigenSpace, minPt, maxPt);
-
-      std::cout << " MIN " << minPt << std::endl;
-      std::cout << " MAX " << maxPt << std::endl;
-
-      depth=maxPt.x+fabs(minPt.x);
-      width=maxPt.y+fabs(minPt.y);
-
-
-      std::cout << "DEPTH OF THE STEP " << depth << std::endl;
-      std::cout << "WIDTH OF THE STEP " <<width << std::endl;
-
 
 
       ///END OF TEST
 
+//      Eigen::Vector3f A, B;
+//      A<< Eigen::Vector3f::UnitZ();
+//      B<<1,1,1.41;
+
+//      std::cout << " NORM " << A.norm()<< " HEHE "  << B.norm() <<std::endl;
+
+//      std::cout << " A " << A << " B " << B << std::endl;
+//       Eigen::Matrix3f R;
+//       R = Eigen::Quaternionf().setFromTwoVectors(A,B);
+//std::cout << "MATRX R" << R << std::endl;
 
 
 
@@ -270,19 +257,54 @@ void CloudHandler::RegionGrowingMethod()
 
 //      for(pcl::PointCloud<pcl::Normal>::iterator it = cloud_normals->begin(); it!= cloud_normals->end(); it++)
 //      {
-      std::cout << "EIGENVALUE"<< checkEigenValue << std::endl;
-      std::cout << "VECTOR" << checkEigenVector << std::endl;
-          std::cout << "EIGENVECTOR 0: " << checkEigenVector.row(0)<<std::endl;
-          std::cout << "EIGENVECTOR 1: " << checkEigenVector.row(1)<<std::endl;
-          std::cout << "EIGENVECTOR 2: " << checkEigenVector.row(2)<<std::endl;
-          std::cout << "EIGENVALUES 0: " << checkEigenValue.row(0)<<std::endl;
-          std::cout << "EIGENVALUES 1: " << checkEigenValue.row(1)<<std::endl;
-          std::cout << "EIGENVALUES 2: " << checkEigenValue.row(2)<<std::endl;
+//      std::cout << "EIGENVALUE"<< checkEigenValue << std::endl;
+//      std::cout << "VECTOR" << checkEigenVector << std::endl <<std::endl;
+//          std::cout << "EIGENVECTOR 0: " << checkEigenVector.col(0)<<std::endl;
+//          std::cout << "EIGENVECTOR 1: " << checkEigenVector.col(1)<<std::endl;
+//          std::cout << "EIGENVECTOR 2: " << checkEigenVector.col(2)<<std::endl;
+//          std::cout << "EIGENVALUES 0: " << checkEigenValue.row(0)<<std::endl;
+//          std::cout << "EIGENVALUES 1: " << checkEigenValue.row(1)<<std::endl;
+//          std::cout << "EIGENVALUES 2: " << checkEigenValue.row(2)<<std::endl;
 
-               if ((fabs(checkEigenVector.row(0)(2)) <= CloudHandler::_horizontalLimit) || (fabs(checkEigenVector.row(0)(2))>=CloudHandler::_verticalLimit))
+          float projectionOnZaxis=checkEigenVector.col(0)(2)+checkEigenVector.col(1)(2);
+
+
+               if ((fabs(projectionOnZaxis) <= CloudHandler::_horizontalLimit) || (fabs(projectionOnZaxis)>=CloudHandler::_verticalLimit))
                {
-                // std::cout << "EIGENVECTOR WITH HORIZONTAL/VERTICAL CONSTRAINTS: " << checkEigenVector.row(0)(2) << " ABS " << fabs(checkEigenVector.row(0)(2)) << std::endl;
 
+                   //TEST
+                   pcl::ExtractIndices<CloudHandler::PointT> extract;
+                   pcl::PointCloud<CloudHandler::PointT>::Ptr cloud_f (new pcl::PointCloud<CloudHandler::PointT>);
+                   extract.setInputCloud (cloud_filtered);
+                   extract.setIndices (inliers);
+                   extract.setNegative (false);
+                   extract.filter (*cloud_f);
+
+                   principal.project(*cloud_f,projectedToEigenSpace);
+
+                   CloudHandler::PointT minPt, maxPt;
+
+                   float depth;
+                   float width;
+
+
+                   pcl::getMinMax3D (projectedToEigenSpace, minPt, maxPt);
+
+//                   std::cout << " MIN " << minPt << std::endl;
+//                   std::cout << " MAX " << maxPt << std::endl;
+
+                   width=maxPt.x+fabs(minPt.x);
+                   depth=maxPt.y+fabs(minPt.y);
+
+
+//                   std::cout << "DEPTH OF THE STEP " << depth << std::endl;
+//                   std::cout << "WIDTH OF THE STEP " <<width << std::endl;
+
+
+
+
+                 depths.push_back(depth);
+                 widths.push_back(width);
                  EigenValues.push_back(checkEigenValue);
                  EigenVectors.push_back(checkEigenVector);
                  eigen_inliers.push_back(inliers);
@@ -292,26 +314,43 @@ void CloudHandler::RegionGrowingMethod()
                }
                else
                {
-                   std::cout << std::endl;
-                   std::cout << "POINT CLOUD REJECTED"<<std::endl;
-                   std::cout << std::endl;
+                   numberRejectedClusters++;
+//                   std::cout << std::endl;
+//                   std::cout << "POINT CLOUD REJECTED"<<std::endl;
+//                   std::cout << std::endl;
                }
     }
-    std::cout << "NUMBERS OF CENTERS " << _centroid_planes.size()<< std::endl;
+    std::cout << "number of clusters rejected: " << numberRejectedClusters << std::endl;
+    std::cout << "number of clusters found with vertical or horizontal orientation" << _centroid_planes.size()<< std::endl;
 
     _colored_cloud =  pcl::PointCloud<pcl::PointXYZRGB>::Ptr (new pcl::PointCloud <pcl::PointXYZRGB>);
 
     _colored_cloud = reg.getColoredCloud ();
 }
 
+void CloudHandler::StairInformation()
+{
+    for (std::size_t index=0; index < EigenVectors.size() ;index++)
+    {
 
+std::cout << "\n\n" << index << " PLANE"<<std::endl;
+std::cout << "CENTER " << std::endl;
+std::cout << _centroid_planes[index] << "\nDEPTH: \n" << depths[index] << "\n WIDTH \n" << widths[index] <<std::endl;
+std::cout << "EIGENVECTOR \n" << EigenVectors[index] << std::endl;
+    }
+
+
+
+
+
+}
 
 void CloudHandler::StairsAndPapesDetection()
 {
     switch(mode_)
     {
         case GRAPH:
-           // FilterCloud();
+            FilterCloud();
             EstimatePointNormal();
             RegionGrowingMethod();
             break;

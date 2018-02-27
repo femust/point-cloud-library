@@ -24,6 +24,7 @@
 #include <iostream>
 #include <pcl/io/pcd_io.h>
 #include <pcl/point_types.h>
+#include <Eigen/Geometry>
 
 
 
@@ -68,6 +69,9 @@ std::vector<Eigen::Vector4f> GiveCentroidPlanes() const;
 
 void PrintData();
 
+void StairInformation();
+
+
 enum Mode {GRAPH = 0,SEPARATE};
 
 
@@ -82,8 +86,7 @@ private:
 
  pcl::PointCloud<pcl::PointXYZRGB>::Ptr _colored_cloud;
 
- std::vector<PointCloud::Ptr> _planes;
- std::vector<Eigen::Vector4f> _centroid_planes;
+
 
  double _verticalLimit = cos(15.0/ 180.0 * M_PI);
  double _horizontalLimit = cos(75.0/ 180.0 * M_PI);
@@ -93,6 +96,11 @@ private:
  std::vector<pcl::PointIndices::Ptr> eigen_inliers;
  std::vector <Eigen::Matrix3f> EigenVectors;
  std::vector <Eigen::Vector3f> EigenValues;
+ std::vector <float> depths;
+ std::vector <float> widths;
+ std::vector<PointCloud::Ptr> _planes;
+ std::vector<Eigen::Vector4f> _centroid_planes;
+
 
 
 };
